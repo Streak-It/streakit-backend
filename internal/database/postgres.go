@@ -14,31 +14,46 @@ import (
 	"github.com/niteshs1/streakit-api/internal/config"
 )
 
-func NewPostgresClient(
-	ctx context.Context,
-	cfg config.DatabaseConfig,
-) (*ent.Client, error) {
+// DB bundles the ent client with the underlying *sql.DB so callers can
+// ping the pool (readiness checks) and inspect pool stats.
+type DB struct {
+	Ent *ent.Client
+	SQL *sql.DB
+}
+
+func NewPostgres(ctx context.Context, cfg config.DatabaseConfig) (*DB, error) {
 	db, err := sql.Open("pgx", cfg.DSN())
 	if err != nil {
-		return nil, fmt.Errorf("failed to open postgres driver: %w", err)
+		return nil, fmt.Errorf("open postgres driver: %w", err)
 	}
-
-	// Use the pgx driver for the connection, but tell ent it's Postgres.
-	drv := entsql.OpenDB(dialect.Postgres, db)
 
 	db.SetMaxOpenConns(cfg.MaxOpenConnections)
 	db.SetMaxIdleConns(cfg.MaxIdleConnections)
 	db.SetConnMaxLifetime(cfg.ConnectionMaxLifetime)
-
-	client := ent.NewClient(ent.Driver(drv))
+	db.SetConnMaxIdleTime(cfg.ConnectionMaxIdleTime)
 
 	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := db.PingContext(pingCtx); err != nil {
-		client.Close()
-		return nil, fmt.Errorf("failed to connect to postgres: %w", err)
+		_ = db.Close()
+		return nil, fmt.Errorf("connect to postgres: %w", err)
 	}
 
-	return client, nil
+	// Use the pgx driver for the connection, but tell ent it's Postgres.
+	drv := entsql.OpenDB(dialect.Postgres, db)
+
+	return &DB{
+		Ent: ent.NewClient(ent.Driver(drv)),
+		SQL: db,
+	}, nil
+}
+
+func (d *DB) Ping(ctx context.Context) error {
+	return d.SQL.PingContext(ctx)
+}
+
+// Close closes the ent client, which also closes the underlying pool.
+func (d *DB) Close() error {
+	return d.Ent.Close()
 }

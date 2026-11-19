@@ -1,0 +1,59 @@
+#!/bin/sh
+# Enforces Conventional Commits: https://www.conventionalcommits.org
+#
+#   <type>(<optional scope>)!: <subject>
+#
+# Examples:
+#   feat: add streak reset endpoint
+#   fix(auth): handle expired refresh token
+#   refactor(database)!: return *DB instead of *ent.Client
+#
+# Enable with: make hooks   (sets core.hooksPath=.githooks)
+
+MSG_FILE="$1"
+
+TYPES="feat|fix|refactor|perf|docs|style|test|build|ci|chore|revert"
+TYPES_LIST=$(printf "%s" "$TYPES" | sed "s/|/, /g")
+MAX_HEADER_LEN=72
+
+# First non-empty, non-comment line is the header.
+HEADER=$(grep -v '^#' "$MSG_FILE" | sed '/^[[:space:]]*$/d' | head -n 1)
+
+# Let git-generated messages through.
+case "$HEADER" in
+  "Merge "* | "Revert \""* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+
+PATTERN="^($TYPES)(\([a-z0-9._/-]+\))?!?: [^ ].*[^.]$"
+
+if ! printf '%s' "$HEADER" | grep -Eq "$PATTERN"; then
+  cat >&2 <<EOF
+
+  ✖ Invalid commit message:
+
+      $HEADER
+
+  Expected:  <type>(<scope>)!: <subject>
+
+  Types:     $TYPES_LIST
+  Scope:     optional, lowercase (e.g. auth, database, api)
+  !          optional, marks a breaking change
+  Subject:   no trailing period
+
+  Examples:
+      feat: add streak reset endpoint
+      fix(auth): handle expired refresh token
+      refactor(database)!: return *DB instead of *ent.Client
+
+EOF
+  exit 1
+fi
+
+if [ "${#HEADER}" -gt "$MAX_HEADER_LEN" ]; then
+  echo >&2 ""
+  echo >&2 "  ✖ Commit header is ${#HEADER} chars; keep it <= $MAX_HEADER_LEN."
+  echo >&2 ""
+  exit 1
+fi
+
+exit 0

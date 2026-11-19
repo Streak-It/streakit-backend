@@ -1,33 +1,44 @@
-# Build stage
+# syntax=docker/dockerfile:1
+
+# ---- Build stage ----
 FROM golang:1.26-alpine AS builder
 
-WORKDIR /app
+WORKDIR /src
 
-RUN apk add --no-cache git ca-certificates
-
+# Cache module downloads independently of source changes.
 COPY go.mod go.sum ./
-
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux \
-    go build -ldflags="-s -w" \
-    -o /app/bin/api ./cmd/api
+ARG TARGETOS
+ARG TARGETARCH
 
-# Runtime stage
-FROM alpine:3.21
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api
+
+# ---- Runtime stage ----
+FROM alpine:3.22
+
+RUN apk add --no-cache ca-certificates tzdata \
+    && addgroup -S app && adduser -S -G app -H -s /sbin/nologin app
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates \
-    && addgroup -S appgroup \
-    && adduser -S appuser -G appgroup
+COPY --from=builder --chown=app:app /out/api ./api
 
-COPY --from=builder /app/bin/api ./api
+USER app
 
-USER appuser
+ENV APP_ENV=production \
+    APP_PORT=8080
 
 EXPOSE 8080
 
-CMD ["./api"]
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget -qO- "http://127.0.0.1:${APP_PORT}/health" >/dev/null || exit 1
+
+# Exec form => the binary is PID 1 and receives SIGTERM directly.
+ENTRYPOINT ["./api"]

@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: streakit_api
+    container_name: streakit_postgres
     restart: unless-stopped
 
     environment:
@@ -10,7 +10,8 @@ services:
       POSTGRES_DB: ${DATABASE_NAME:-streakit_api}
 
     ports:
-      - "${DATABASE_PORT:-5432}:5432"
+      # Bound to localhost so the DB isn't exposed on the LAN.
+      - "127.0.0.1:${DATABASE_PORT:-5432}:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -25,6 +26,27 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # Run with: docker compose --profile app up -d --build
+  api:
+    profiles: ["app"]
+    build: .
+    container_name: streakit_api
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_PORT: 8080
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 15s
 
 volumes:
   postgres_data:
