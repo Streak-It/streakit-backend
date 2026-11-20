@@ -1,0 +1,3278 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Staff (super admin / admin) API for StreakIt: auth, team, venues, artists, events and audit log.\nAuth uses HttpOnly cookies: call POST /auth/login first; the browser then sends `access_token` automatically.\nAll POST/PUT/PATCH requests must send `Content-Type: application/json`.",
+        "title": "StreakIt Staff API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/artists": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "List artists",
+                "parameters": [
+                    {
+                        "maxLength": 200,
+                        "type": "string",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "example": "-created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "hidden"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Page-dto_ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "The slug is generated from the name; collisions get -2, -3, …",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Create an artist",
+                "parameters": [
+                    {
+                        "description": "Artist",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateArtistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/artists/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Get an artist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Renaming regenerates the slug.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Rename an artist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateArtistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/artists/{id}/hide": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Hide an artist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/artists/{id}/unhide": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Unhide an artist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/audit": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Newest first by default (`sort=-created_at`); use `sort=created_at` for oldest first. `from`/`to` are RFC 3339.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "summary": "Read the audit log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "name": "actor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "name": "entity_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "user",
+                            "venue",
+                            "artist",
+                            "event"
+                        ],
+                        "type": "string",
+                        "name": "entity_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "example": "-created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Page-dto_AuditEntryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Sets HttpOnly `access_token` and `refresh_token` cookies. Tokens are never returned in the body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log in with email and password",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProfileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "access_token and refresh_token (HttpOnly)"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "invalid_credentials",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "validation_error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "429": {
+                        "description": "rate_limited",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "description": "Revokes the current refresh token and clears both cookies. Works even if the access token has expired.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log out",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProfileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized / token_expired",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/password": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Revokes every refresh token of the caller and clears the session cookies; log in again afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Change own password",
+                "parameters": [
+                    {
+                        "description": "Passwords",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Success"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Uses the `refresh_token` cookie; issues new access and refresh cookies. Reusing an old refresh token revokes all sessions of that user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Rotate the session",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProfileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "invalid_credentials",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Sort by created_at (default desc), updated_at, scheduled_start_at or title.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "List events",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "draft",
+                            "published"
+                        ],
+                        "type": "string",
+                        "name": "publish_state",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "example": "-created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "scheduled",
+                            "cancelled",
+                            "postponed"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "name": "venue_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Page-dto_EventResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Times are RFC 3339 and stored in UTC. If set, doors ≤ start ≤ end. ticket_url must be https.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Create a draft event",
+                "parameters": [
+                    {
+                        "description": "Event",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Get an event with its lineup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Requires the current `version`. Omitted keys are unchanged; time fields accept null to clear.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Update event fields",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "version mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Cancel a published event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/lineup": {
+            "put": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Replaces all lineup rows. Hidden artists cannot be newly added. A published event must keep at least one headliner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Replace the lineup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Lineup",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReplaceLineupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/postpone": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Status stays `scheduled` with the new times.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Postpone a published event to new times",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New times",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PostponeEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Requires: active venue, scheduled_start_at, valid time order, ≥1 headliner, no hidden artists.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Publish a draft event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "illegal state transition",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "publish requirements not met",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Restore a cancelled event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/unpublish": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Unpublish a scheduled event (back to draft)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EventDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Liveness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.HealthStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.HealthStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.HealthStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/team/users": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "List team users",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 100,
+                        "type": "string",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "super_admin",
+                            "admin"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "example": "-created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "blocked"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Page-dto_UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Create a team user (super admin)",
+                "parameters": [
+                    {
+                        "description": "New user",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "email already in use",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Get a team user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Update name / email (super admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/users/{id}/block": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Revokes all of the user's sessions. You cannot block yourself or the last active super admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Block a user (super admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/users/{id}/role": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Revokes all of the user's sessions. You cannot change your own role or demote the last active super admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Change a user's role (super admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New role",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/users/{id}/unblock": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Unblock a user (super admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/venues": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Sort by name (default), city, created_at or updated_at; prefix with - for descending.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "List venues",
+                "parameters": [
+                    {
+                        "maxLength": 100,
+                        "type": "string",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 200,
+                        "type": "string",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "example": "-created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "retired"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Page-dto_VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "Create a venue",
+                "parameters": [
+                    {
+                        "description": "Venue",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateVenueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/venues/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "Get a venue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Venue ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Requires the current `version`; a stale version returns 409 conflict.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "Update a venue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Venue ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateVenueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "409": {
+                        "description": "version mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/venues/{id}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "Restore a retired venue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Venue ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/venues/{id}/retire": {
+            "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "venues"
+                ],
+                "summary": "Retire a venue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Venue ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.VenueResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Failure"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "apperror.Code": {
+            "type": "string",
+            "enum": [
+                "validation_error",
+                "invalid_credentials",
+                "unauthorized",
+                "token_expired",
+                "forbidden",
+                "not_found",
+                "method_not_allowed",
+                "conflict",
+                "unsupported_media_type",
+                "rate_limited",
+                "internal_error"
+            ],
+            "x-enum-varnames": [
+                "CodeValidation",
+                "CodeInvalidCredentials",
+                "CodeUnauthorized",
+                "CodeTokenExpired",
+                "CodeForbidden",
+                "CodeNotFound",
+                "CodeMethodNotAllowed",
+                "CodeConflict",
+                "CodeUnsupportedMediaType",
+                "CodeRateLimited",
+                "CodeInternal"
+            ]
+        },
+        "apperror.FieldError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string",
+                    "example": "email"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "required"
+                }
+            }
+        },
+        "domain.ArtistStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "hidden"
+            ],
+            "x-enum-varnames": [
+                "ArtistActive",
+                "ArtistHidden"
+            ]
+        },
+        "domain.Billing": {
+            "type": "string",
+            "enum": [
+                "headliner",
+                "support"
+            ],
+            "x-enum-varnames": [
+                "Headliner",
+                "Support"
+            ]
+        },
+        "domain.EventStatus": {
+            "type": "string",
+            "enum": [
+                "scheduled",
+                "cancelled",
+                "postponed"
+            ],
+            "x-enum-varnames": [
+                "EventScheduled",
+                "EventCancelled",
+                "EventPostponed"
+            ]
+        },
+        "domain.PublishState": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "published"
+            ],
+            "x-enum-varnames": [
+                "Draft",
+                "Published"
+            ]
+        },
+        "domain.Role": {
+            "type": "string",
+            "enum": [
+                "super_admin",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "RoleSuperAdmin",
+                "RoleAdmin"
+            ]
+        },
+        "domain.UserStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "blocked"
+            ],
+            "x-enum-varnames": [
+                "UserActive",
+                "UserBlocked"
+            ]
+        },
+        "domain.VenueStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "retired"
+            ],
+            "x-enum-varnames": [
+                "VenueActive",
+                "VenueRetired"
+            ]
+        },
+        "dto.ArtistResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "prateek-kuhad"
+                },
+                "status": {
+                    "enum": [
+                        "active",
+                        "hidden"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.ArtistStatus"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AuditEntryResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "event.publish"
+                },
+                "actor_id": {
+                    "type": "string"
+                },
+                "after": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "before": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "entity_id": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string",
+                    "example": "event"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "current_password",
+                "new_password"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string",
+                    "maxLength": 256
+                },
+                "new_password": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 12
+                }
+            }
+        },
+        "dto.ChangeRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "super_admin",
+                        "admin"
+                    ],
+                    "example": "admin"
+                }
+            }
+        },
+        "dto.CreateArtistRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Prateek Kuhad"
+                }
+            }
+        },
+        "dto.CreateEventRequest": {
+            "type": "object",
+            "required": [
+                "venue_id"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 20000
+                },
+                "doors_open_at": {
+                    "type": "string",
+                    "example": "2026-12-20T18:30:00Z"
+                },
+                "expected_end_at": {
+                    "type": "string",
+                    "example": "2026-12-20T22:30:00Z"
+                },
+                "scheduled_start_at": {
+                    "type": "string",
+                    "example": "2026-12-20T19:30:00Z"
+                },
+                "ticket_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "example": "https://tickets.example.com/e/123"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Cold/Mess Tour"
+                },
+                "venue_id": {
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "dto.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "ravi@streakit.app"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Ravi Kumar"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 12,
+                    "example": "a-long-initial-password"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "super_admin",
+                        "admin"
+                    ],
+                    "example": "admin"
+                }
+            }
+        },
+        "dto.CreateVenueRequest": {
+            "type": "object",
+            "required": [
+                "city",
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Mathuradas Mills, Lower Parel"
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Mumbai"
+                },
+                "info": {
+                    "type": "string",
+                    "maxLength": 10000,
+                    "example": "Entry from Gate 2"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Blue Frog"
+                },
+                "timezone": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "example": "Asia/Kolkata"
+                }
+            }
+        },
+        "dto.EventDetailResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "doors_open_at": {
+                    "type": "string"
+                },
+                "expected_end_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lineup": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.LineupEntryResponse"
+                    }
+                },
+                "publish_state": {
+                    "enum": [
+                        "draft",
+                        "published"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.PublishState"
+                        }
+                    ]
+                },
+                "scheduled_start_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "enum": [
+                        "scheduled",
+                        "cancelled",
+                        "postponed"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.EventStatus"
+                        }
+                    ]
+                },
+                "ticket_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "venue_id": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.EventResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "doors_open_at": {
+                    "type": "string"
+                },
+                "expected_end_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "publish_state": {
+                    "enum": [
+                        "draft",
+                        "published"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.PublishState"
+                        }
+                    ]
+                },
+                "scheduled_start_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "enum": [
+                        "scheduled",
+                        "cancelled",
+                        "postponed"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.EventStatus"
+                        }
+                    ]
+                },
+                "ticket_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "venue_id": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.LineupEntryResponse": {
+            "type": "object",
+            "properties": {
+                "artist_id": {
+                    "type": "string"
+                },
+                "artist_name": {
+                    "type": "string"
+                },
+                "artist_slug": {
+                    "type": "string"
+                },
+                "artist_status": {
+                    "enum": [
+                        "active",
+                        "hidden"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.ArtistStatus"
+                        }
+                    ]
+                },
+                "billing": {
+                    "enum": [
+                        "headliner",
+                        "support"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Billing"
+                        }
+                    ]
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.LineupItemRequest": {
+            "type": "object",
+            "required": [
+                "artist_id",
+                "billing"
+            ],
+            "properties": {
+                "artist_id": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "billing": {
+                    "type": "string",
+                    "enum": [
+                        "headliner",
+                        "support"
+                    ],
+                    "example": "headliner"
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 0
+                }
+            }
+        },
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "owner@streakit.app"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "example": "correct-horse-battery"
+                }
+            }
+        },
+        "dto.PostponeEventRequest": {
+            "type": "object",
+            "required": [
+                "scheduled_start_at"
+            ],
+            "properties": {
+                "doors_open_at": {
+                    "type": "string",
+                    "example": "2027-01-10T18:30:00Z"
+                },
+                "expected_end_at": {
+                    "type": "string",
+                    "example": "2027-01-10T22:30:00Z"
+                },
+                "scheduled_start_at": {
+                    "type": "string",
+                    "example": "2027-01-10T19:30:00Z"
+                }
+            }
+        },
+        "dto.ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "owner@streakit.app"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0b9c2f3e-8a1d-4c55-9f2e-3d1b7a6c9e10"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Asha Rao"
+                },
+                "role": {
+                    "enum": [
+                        "super_admin",
+                        "admin"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ],
+                    "example": "super_admin"
+                }
+            }
+        },
+        "dto.ReplaceLineupRequest": {
+            "type": "object",
+            "required": [
+                "lineup"
+            ],
+            "properties": {
+                "lineup": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                        "$ref": "#/definitions/dto.LineupItemRequest"
+                    }
+                }
+            }
+        },
+        "dto.UpdateArtistRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Prateek Kuhad"
+                }
+            }
+        },
+        "dto.UpdateEventRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 20000
+                },
+                "doors_open_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "expected_end_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "scheduled_start_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "ticket_url": {
+                    "type": "string",
+                    "maxLength": 2048
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "venue_id": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                }
+            }
+        },
+        "dto.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "ravi.k@streakit.app"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Ravi K."
+                }
+            }
+        },
+        "dto.UpdateVenueRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "info": {
+                    "type": "string",
+                    "maxLength": 10000
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "timezone": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "version": {
+                    "description": "Version must match the stored version (optimistic locking).",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                }
+            }
+        },
+        "dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "enum": [
+                        "super_admin",
+                        "admin"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ]
+                },
+                "status": {
+                    "enum": [
+                        "active",
+                        "blocked"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.UserStatus"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.VenueResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "enum": [
+                        "active",
+                        "retired"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.VenueStatus"
+                        }
+                    ]
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "Asia/Kolkata"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handler.HealthStatus": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "type": "string",
+                    "example": "up"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "response.ErrorBody": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/apperror.Code"
+                        }
+                    ],
+                    "example": "validation_error"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/apperror.FieldError"
+                    }
+                }
+            }
+        },
+        "response.Failure": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/response.ErrorBody"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Validation failed"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "response.Page-dto_ArtistResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ArtistResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "response.Page-dto_AuditEntryResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AuditEntryResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "response.Page-dto_EventResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.EventResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "response.Page-dto_UserResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "response.Page-dto_VenueResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.VenueResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "response.Success": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "OK"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "CookieAuth": {
+            "description": "HttpOnly session cookie set by POST /auth/login.",
+            "type": "apiKey",
+            "name": "access_token",
+            "in": "cookie"
+        }
+    }
+}

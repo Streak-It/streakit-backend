@@ -13,10 +13,20 @@ import (
 
 	"github.com/niteshs1/streakit-api/internal/config"
 	"github.com/niteshs1/streakit-api/internal/database"
-	"github.com/niteshs1/streakit-api/internal/handler"
-	"github.com/niteshs1/streakit-api/internal/routes"
 	"github.com/niteshs1/streakit-api/internal/server"
 )
+
+//	@title						StreakIt Staff API
+//	@version					1.0
+//	@description				Staff (super admin / admin) API for StreakIt: auth, team, venues, artists, events and audit log.
+//	@description				Auth uses HttpOnly cookies: call POST /auth/login first; the browser then sends `access_token` automatically.
+//	@description				All POST/PUT/PATCH requests must send `Content-Type: application/json`.
+//	@BasePath					/api/v1
+//	@schemes					http https
+//	@securityDefinitions.apikey	CookieAuth
+//	@in							cookie
+//	@name						access_token
+//	@description				HttpOnly session cookie set by POST /auth/login.
 
 func main() {
 	// All real work lives in run() so deferred cleanup (DB pool close,
@@ -54,23 +64,10 @@ func run() error {
 	}()
 	logger.Info("database connected")
 
-	if cfg.Database.AutoMigrate {
-		if err := db.Ent.Schema.Create(ctx); err != nil {
-			return fmt.Errorf("database schema migration: %w", err)
-		}
-		logger.Info("database schema synchronized")
-	} else {
-		logger.Info("auto-migration disabled; skipping schema sync")
-	}
-
-	router, err := server.NewRouter(cfg.App, logger, routes.Handlers{
-		Health: handler.NewHealthHandler(db),
-	})
+	httpServer, err := server.New(ctx, cfg, db, logger)
 	if err != nil {
 		return err
 	}
-
-	httpServer := server.NewHTTPServer(cfg.App, router)
 
 	// Bind synchronously so "port already in use" fails fast and the
 	// "server started" log is only emitted once we are actually listening.

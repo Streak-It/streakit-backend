@@ -9,6 +9,66 @@ import (
 	"github.com/niteshs1/streakit-api/ent"
 )
 
+// The ArtistFunc type is an adapter to allow the use of ordinary
+// function as Artist mutator.
+type ArtistFunc func(context.Context, *ent.ArtistMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ArtistFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ArtistMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ArtistMutation", m)
+}
+
+// The AuditLogFunc type is an adapter to allow the use of ordinary
+// function as AuditLog mutator.
+type AuditLogFunc func(context.Context, *ent.AuditLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AuditLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditLogMutation", m)
+}
+
+// The EventFunc type is an adapter to allow the use of ordinary
+// function as Event mutator.
+type EventFunc func(context.Context, *ent.EventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
+}
+
+// The LineupEntryFunc type is an adapter to allow the use of ordinary
+// function as LineupEntry mutator.
+type LineupEntryFunc func(context.Context, *ent.LineupEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LineupEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LineupEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LineupEntryMutation", m)
+}
+
+// The RefreshTokenFunc type is an adapter to allow the use of ordinary
+// function as RefreshToken mutator.
+type RefreshTokenFunc func(context.Context, *ent.RefreshTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RefreshTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RefreshTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RefreshTokenMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
@@ -19,6 +79,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The VenueFunc type is an adapter to allow the use of ordinary
+// function as Venue mutator.
+type VenueFunc func(context.Context, *ent.VenueMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VenueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VenueMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VenueMutation", m)
 }
 
 // Condition is a hook condition function.

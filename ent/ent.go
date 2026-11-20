@@ -12,7 +12,13 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/niteshs1/streakit-api/ent/artist"
+	"github.com/niteshs1/streakit-api/ent/auditlog"
+	"github.com/niteshs1/streakit-api/ent/event"
+	"github.com/niteshs1/streakit-api/ent/lineupentry"
+	"github.com/niteshs1/streakit-api/ent/refreshtoken"
 	"github.com/niteshs1/streakit-api/ent/user"
+	"github.com/niteshs1/streakit-api/ent/venue"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -73,7 +79,13 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			artist.Table:       artist.ValidColumn,
+			auditlog.Table:     auditlog.ValidColumn,
+			event.Table:        event.ValidColumn,
+			lineupentry.Table:  lineupentry.ValidColumn,
+			refreshtoken.Table: refreshtoken.ValidColumn,
+			user.Table:         user.ValidColumn,
+			venue.Table:        venue.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

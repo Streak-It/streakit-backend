@@ -1,0 +1,2071 @@
+basePath: /api/v1
+definitions:
+  apperror.Code:
+    enum:
+    - validation_error
+    - invalid_credentials
+    - unauthorized
+    - token_expired
+    - forbidden
+    - not_found
+    - method_not_allowed
+    - conflict
+    - unsupported_media_type
+    - rate_limited
+    - internal_error
+    type: string
+    x-enum-varnames:
+    - CodeValidation
+    - CodeInvalidCredentials
+    - CodeUnauthorized
+    - CodeTokenExpired
+    - CodeForbidden
+    - CodeNotFound
+    - CodeMethodNotAllowed
+    - CodeConflict
+    - CodeUnsupportedMediaType
+    - CodeRateLimited
+    - CodeInternal
+  apperror.FieldError:
+    properties:
+      field:
+        example: email
+        type: string
+      message:
+        example: required
+        type: string
+    type: object
+  domain.ArtistStatus:
+    enum:
+    - active
+    - hidden
+    type: string
+    x-enum-varnames:
+    - ArtistActive
+    - ArtistHidden
+  domain.Billing:
+    enum:
+    - headliner
+    - support
+    type: string
+    x-enum-varnames:
+    - Headliner
+    - Support
+  domain.EventStatus:
+    enum:
+    - scheduled
+    - cancelled
+    - postponed
+    type: string
+    x-enum-varnames:
+    - EventScheduled
+    - EventCancelled
+    - EventPostponed
+  domain.PublishState:
+    enum:
+    - draft
+    - published
+    type: string
+    x-enum-varnames:
+    - Draft
+    - Published
+  domain.Role:
+    enum:
+    - super_admin
+    - admin
+    type: string
+    x-enum-varnames:
+    - RoleSuperAdmin
+    - RoleAdmin
+  domain.UserStatus:
+    enum:
+    - active
+    - blocked
+    type: string
+    x-enum-varnames:
+    - UserActive
+    - UserBlocked
+  domain.VenueStatus:
+    enum:
+    - active
+    - retired
+    type: string
+    x-enum-varnames:
+    - VenueActive
+    - VenueRetired
+  dto.ArtistResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        example: prateek-kuhad
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.ArtistStatus'
+        enum:
+        - active
+        - hidden
+      updated_at:
+        type: string
+    type: object
+  dto.AuditEntryResponse:
+    properties:
+      action:
+        example: event.publish
+        type: string
+      actor_id:
+        type: string
+      after:
+        additionalProperties: {}
+        type: object
+      before:
+        additionalProperties: {}
+        type: object
+      created_at:
+        type: string
+      entity_id:
+        type: string
+      entity_type:
+        example: event
+        type: string
+      id:
+        type: string
+      request_id:
+        type: string
+    type: object
+  dto.ChangePasswordRequest:
+    properties:
+      current_password:
+        maxLength: 256
+        type: string
+      new_password:
+        maxLength: 256
+        minLength: 12
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  dto.ChangeRoleRequest:
+    properties:
+      role:
+        enum:
+        - super_admin
+        - admin
+        example: admin
+        type: string
+    required:
+    - role
+    type: object
+  dto.CreateArtistRequest:
+    properties:
+      name:
+        example: Prateek Kuhad
+        maxLength: 200
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateEventRequest:
+    properties:
+      description:
+        maxLength: 20000
+        type: string
+      doors_open_at:
+        example: "2026-12-20T18:30:00Z"
+        type: string
+      expected_end_at:
+        example: "2026-12-20T22:30:00Z"
+        type: string
+      scheduled_start_at:
+        example: "2026-12-20T19:30:00Z"
+        type: string
+      ticket_url:
+        example: https://tickets.example.com/e/123
+        maxLength: 2048
+        type: string
+      title:
+        example: Cold/Mess Tour
+        maxLength: 200
+        type: string
+      venue_id:
+        format: uuid
+        type: string
+    required:
+    - venue_id
+    type: object
+  dto.CreateUserRequest:
+    properties:
+      email:
+        example: ravi@streakit.app
+        maxLength: 255
+        type: string
+      name:
+        example: Ravi Kumar
+        maxLength: 100
+        type: string
+      password:
+        example: a-long-initial-password
+        maxLength: 256
+        minLength: 12
+        type: string
+      role:
+        enum:
+        - super_admin
+        - admin
+        example: admin
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  dto.CreateVenueRequest:
+    properties:
+      address:
+        example: Mathuradas Mills, Lower Parel
+        maxLength: 500
+        type: string
+      city:
+        example: Mumbai
+        maxLength: 100
+        type: string
+      info:
+        example: Entry from Gate 2
+        maxLength: 10000
+        type: string
+      name:
+        example: Blue Frog
+        maxLength: 200
+        type: string
+      timezone:
+        example: Asia/Kolkata
+        maxLength: 64
+        type: string
+    required:
+    - city
+    - name
+    type: object
+  dto.EventDetailResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      doors_open_at:
+        type: string
+      expected_end_at:
+        type: string
+      id:
+        type: string
+      lineup:
+        items:
+          $ref: '#/definitions/dto.LineupEntryResponse'
+        type: array
+      publish_state:
+        allOf:
+        - $ref: '#/definitions/domain.PublishState'
+        enum:
+        - draft
+        - published
+      scheduled_start_at:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.EventStatus'
+        enum:
+        - scheduled
+        - cancelled
+        - postponed
+      ticket_url:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      venue_id:
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
+  dto.EventResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      doors_open_at:
+        type: string
+      expected_end_at:
+        type: string
+      id:
+        type: string
+      publish_state:
+        allOf:
+        - $ref: '#/definitions/domain.PublishState'
+        enum:
+        - draft
+        - published
+      scheduled_start_at:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.EventStatus'
+        enum:
+        - scheduled
+        - cancelled
+        - postponed
+      ticket_url:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      venue_id:
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
+  dto.LineupEntryResponse:
+    properties:
+      artist_id:
+        type: string
+      artist_name:
+        type: string
+      artist_slug:
+        type: string
+      artist_status:
+        allOf:
+        - $ref: '#/definitions/domain.ArtistStatus'
+        enum:
+        - active
+        - hidden
+      billing:
+        allOf:
+        - $ref: '#/definitions/domain.Billing'
+        enum:
+        - headliner
+        - support
+      sort_order:
+        type: integer
+    type: object
+  dto.LineupItemRequest:
+    properties:
+      artist_id:
+        format: uuid
+        type: string
+      billing:
+        enum:
+        - headliner
+        - support
+        example: headliner
+        type: string
+      sort_order:
+        example: 0
+        minimum: 0
+        type: integer
+    required:
+    - artist_id
+    - billing
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        example: owner@streakit.app
+        maxLength: 255
+        type: string
+      password:
+        example: correct-horse-battery
+        maxLength: 256
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.PostponeEventRequest:
+    properties:
+      doors_open_at:
+        example: "2027-01-10T18:30:00Z"
+        type: string
+      expected_end_at:
+        example: "2027-01-10T22:30:00Z"
+        type: string
+      scheduled_start_at:
+        example: "2027-01-10T19:30:00Z"
+        type: string
+    required:
+    - scheduled_start_at
+    type: object
+  dto.ProfileResponse:
+    properties:
+      email:
+        example: owner@streakit.app
+        type: string
+      id:
+        example: 0b9c2f3e-8a1d-4c55-9f2e-3d1b7a6c9e10
+        type: string
+      name:
+        example: Asha Rao
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.Role'
+        enum:
+        - super_admin
+        - admin
+        example: super_admin
+    type: object
+  dto.ReplaceLineupRequest:
+    properties:
+      lineup:
+        items:
+          $ref: '#/definitions/dto.LineupItemRequest'
+        maxItems: 100
+        type: array
+    required:
+    - lineup
+    type: object
+  dto.UpdateArtistRequest:
+    properties:
+      name:
+        example: Prateek Kuhad
+        maxLength: 200
+        type: string
+    type: object
+  dto.UpdateEventRequest:
+    properties:
+      description:
+        maxLength: 20000
+        type: string
+      doors_open_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      expected_end_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      scheduled_start_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      ticket_url:
+        maxLength: 2048
+        type: string
+      title:
+        maxLength: 200
+        type: string
+      venue_id:
+        format: uuid
+        type: string
+      version:
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - version
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      email:
+        example: ravi.k@streakit.app
+        maxLength: 255
+        type: string
+      name:
+        example: Ravi K.
+        maxLength: 100
+        type: string
+    type: object
+  dto.UpdateVenueRequest:
+    properties:
+      address:
+        maxLength: 500
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      info:
+        maxLength: 10000
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      timezone:
+        maxLength: 64
+        type: string
+      version:
+        description: Version must match the stored version (optimistic locking).
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - version
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      last_login_at:
+        type: string
+      name:
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.Role'
+        enum:
+        - super_admin
+        - admin
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.UserStatus'
+        enum:
+        - active
+        - blocked
+      updated_at:
+        type: string
+    type: object
+  dto.VenueResponse:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      info:
+        type: string
+      name:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.VenueStatus'
+        enum:
+        - active
+        - retired
+      timezone:
+        example: Asia/Kolkata
+        type: string
+      updated_at:
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
+  handler.HealthStatus:
+    properties:
+      database:
+        example: up
+        type: string
+      status:
+        example: healthy
+        type: string
+    type: object
+  response.ErrorBody:
+    properties:
+      code:
+        allOf:
+        - $ref: '#/definitions/apperror.Code'
+        example: validation_error
+      fields:
+        items:
+          $ref: '#/definitions/apperror.FieldError'
+        type: array
+    type: object
+  response.Failure:
+    properties:
+      error:
+        $ref: '#/definitions/response.ErrorBody'
+      message:
+        example: Validation failed
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  response.Page-dto_ArtistResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.ArtistResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  response.Page-dto_AuditEntryResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.AuditEntryResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  response.Page-dto_EventResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.EventResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  response.Page-dto_UserResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.UserResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  response.Page-dto_VenueResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.VenueResponse'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 0
+        type: integer
+    type: object
+  response.Success:
+    properties:
+      data: {}
+      message:
+        example: OK
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+info:
+  contact: {}
+  description: |-
+    Staff (super admin / admin) API for StreakIt: auth, team, venues, artists, events and audit log.
+    Auth uses HttpOnly cookies: call POST /auth/login first; the browser then sends `access_token` automatically.
+    All POST/PUT/PATCH requests must send `Content-Type: application/json`.
+  title: StreakIt Staff API
+  version: "1.0"
+paths:
+  /artists:
+    get:
+      parameters:
+      - in: query
+        maxLength: 200
+        name: name
+        type: string
+      - example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - example: -created_at
+        in: query
+        maxLength: 64
+        name: sort
+        type: string
+      - enum:
+        - active
+        - hidden
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Page-dto_ArtistResponse'
+              type: object
+      security:
+      - CookieAuth: []
+      summary: List artists
+      tags:
+      - artists
+    post:
+      consumes:
+      - application/json
+      description: The slug is generated from the name; collisions get -2, -3, …
+      parameters:
+      - description: Artist
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateArtistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtistResponse'
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Create an artist
+      tags:
+      - artists
+  /artists/{id}:
+    get:
+      parameters:
+      - description: Artist ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtistResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Get an artist
+      tags:
+      - artists
+    patch:
+      consumes:
+      - application/json
+      description: Renaming regenerates the slug.
+      parameters:
+      - description: Artist ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateArtistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtistResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Rename an artist
+      tags:
+      - artists
+  /artists/{id}/hide:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Artist ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtistResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Hide an artist
+      tags:
+      - artists
+  /artists/{id}/unhide:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Artist ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtistResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Unhide an artist
+      tags:
+      - artists
+  /audit:
+    get:
+      description: Newest first by default (`sort=-created_at`); use `sort=created_at`
+        for oldest first. `from`/`to` are RFC 3339.
+      parameters:
+      - format: uuid
+        in: query
+        name: actor_id
+        type: string
+      - format: uuid
+        in: query
+        name: entity_id
+        type: string
+      - enum:
+        - user
+        - venue
+        - artist
+        - event
+        in: query
+        name: entity_type
+        type: string
+      - format: date-time
+        in: query
+        name: from
+        type: string
+      - example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - example: -created_at
+        in: query
+        maxLength: 64
+        name: sort
+        type: string
+      - format: date-time
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Page-dto_AuditEntryResponse'
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Read the audit log
+      tags:
+      - audit
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Sets HttpOnly `access_token` and `refresh_token` cookies. Tokens
+        are never returned in the body.
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: access_token and refresh_token (HttpOnly)
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProfileResponse'
+              type: object
+        "401":
+          description: invalid_credentials
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "429":
+          description: rate_limited
+          schema:
+            $ref: '#/definitions/response.Failure'
+      summary: Log in with email and password
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes the current refresh token and clears both cookies. Works
+        even if the access token has expired.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Success'
+      summary: Log out
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProfileResponse'
+              type: object
+        "401":
+          description: unauthorized / token_expired
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Current user
+      tags:
+      - auth
+  /auth/password:
+    post:
+      consumes:
+      - application/json
+      description: Revokes every refresh token of the caller and clears the session
+        cookies; log in again afterwards.
+      parameters:
+      - description: Passwords
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Success'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Change own password
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Uses the `refresh_token` cookie; issues new access and refresh
+        cookies. Reusing an old refresh token revokes all sessions of that user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProfileResponse'
+              type: object
+        "401":
+          description: invalid_credentials
+          schema:
+            $ref: '#/definitions/response.Failure'
+      summary: Rotate the session
+      tags:
+      - auth
+  /events:
+    get:
+      description: Sort by created_at (default desc), updated_at, scheduled_start_at
+        or title.
+      parameters:
+      - example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - enum:
+        - draft
+        - published
+        in: query
+        name: publish_state
+        type: string
+      - example: -created_at
+        in: query
+        maxLength: 64
+        name: sort
+        type: string
+      - enum:
+        - scheduled
+        - cancelled
+        - postponed
+        in: query
+        name: status
+        type: string
+      - format: uuid
+        in: query
+        name: venue_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Page-dto_EventResponse'
+              type: object
+      security:
+      - CookieAuth: []
+      summary: List events
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: Times are RFC 3339 and stored in UTC. If set, doors ≤ start ≤ end.
+        ticket_url must be https.
+      parameters:
+      - description: Event
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Create a draft event
+      tags:
+      - events
+  /events/{id}:
+    get:
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Get an event with its lineup
+      tags:
+      - events
+    patch:
+      consumes:
+      - application/json
+      description: Requires the current `version`. Omitted keys are unchanged; time
+        fields accept null to clear.
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: version mismatch
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Update event fields
+      tags:
+      - events
+  /events/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Cancel a published event
+      tags:
+      - events
+  /events/{id}/lineup:
+    put:
+      consumes:
+      - application/json
+      description: Replaces all lineup rows. Hidden artists cannot be newly added.
+        A published event must keep at least one headliner.
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Lineup
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReplaceLineupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Replace the lineup
+      tags:
+      - events
+  /events/{id}/postpone:
+    post:
+      consumes:
+      - application/json
+      description: Status stays `scheduled` with the new times.
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New times
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostponeEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Postpone a published event to new times
+      tags:
+      - events
+  /events/{id}/publish:
+    post:
+      consumes:
+      - application/json
+      description: 'Requires: active venue, scheduled_start_at, valid time order,
+        ≥1 headliner, no hidden artists.'
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "409":
+          description: illegal state transition
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: publish requirements not met
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Publish a draft event
+      tags:
+      - events
+  /events/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Restore a cancelled event
+      tags:
+      - events
+  /events/{id}/unpublish:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EventDetailResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Unpublish a scheduled event (back to draft)
+      tags:
+      - events
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.HealthStatus'
+              type: object
+      summary: Liveness probe
+      tags:
+      - health
+  /ready:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.HealthStatus'
+              type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.HealthStatus'
+              type: object
+      summary: Readiness probe
+      tags:
+      - health
+  /team/users:
+    get:
+      parameters:
+      - example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - in: query
+        maxLength: 100
+        name: q
+        type: string
+      - enum:
+        - super_admin
+        - admin
+        in: query
+        name: role
+        type: string
+      - example: -created_at
+        in: query
+        maxLength: 64
+        name: sort
+        type: string
+      - enum:
+        - active
+        - blocked
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Page-dto_UserResponse'
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: List team users
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New user
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: email already in use
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Create a team user (super admin)
+      tags:
+      - team
+  /team/users/{id}:
+    get:
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Get a team user
+      tags:
+      - team
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Update name / email (super admin)
+      tags:
+      - team
+  /team/users/{id}/block:
+    post:
+      consumes:
+      - application/json
+      description: Revokes all of the user's sessions. You cannot block yourself or
+        the last active super admin.
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Block a user (super admin)
+      tags:
+      - team
+  /team/users/{id}/role:
+    post:
+      consumes:
+      - application/json
+      description: Revokes all of the user's sessions. You cannot change your own
+        role or demote the last active super admin.
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New role
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangeRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Change a user's role (super admin)
+      tags:
+      - team
+  /team/users/{id}/unblock:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Unblock a user (super admin)
+      tags:
+      - team
+  /venues:
+    get:
+      description: Sort by name (default), city, created_at or updated_at; prefix
+        with - for descending.
+      parameters:
+      - in: query
+        maxLength: 100
+        name: city
+        type: string
+      - in: query
+        maxLength: 200
+        name: name
+        type: string
+      - example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - example: -created_at
+        in: query
+        maxLength: 64
+        name: sort
+        type: string
+      - enum:
+        - active
+        - retired
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Page-dto_VenueResponse'
+              type: object
+      security:
+      - CookieAuth: []
+      summary: List venues
+      tags:
+      - venues
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Venue
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateVenueRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.VenueResponse'
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Create a venue
+      tags:
+      - venues
+  /venues/{id}:
+    get:
+      parameters:
+      - description: Venue ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.VenueResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Get a venue
+      tags:
+      - venues
+    patch:
+      consumes:
+      - application/json
+      description: Requires the current `version`; a stale version returns 409 conflict.
+      parameters:
+      - description: Venue ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateVenueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.VenueResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "409":
+          description: version mismatch
+          schema:
+            $ref: '#/definitions/response.Failure'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Update a venue
+      tags:
+      - venues
+  /venues/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Venue ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.VenueResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Restore a retired venue
+      tags:
+      - venues
+  /venues/{id}/retire:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Venue ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.VenueResponse'
+              type: object
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Failure'
+      security:
+      - CookieAuth: []
+      summary: Retire a venue
+      tags:
+      - venues
+schemes:
+- http
+- https
+securityDefinitions:
+  CookieAuth:
+    description: HttpOnly session cookie set by POST /auth/login.
+    in: cookie
+    name: access_token
+    type: apiKey
+swagger: "2.0"

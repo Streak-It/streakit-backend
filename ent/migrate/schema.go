@@ -8,25 +8,257 @@ import (
 )
 
 var (
+	// ArtistsColumns holds the columns for the "artists" table.
+	ArtistsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "name", Type: field.TypeString, Size: 200},
+		{Name: "slug", Type: field.TypeString, Unique: true, Size: 220},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "hidden"}, Default: "active"},
+	}
+	// ArtistsTable holds the schema information for the "artists" table.
+	ArtistsTable = &schema.Table{
+		Name:       "artists",
+		Columns:    ArtistsColumns,
+		PrimaryKey: []*schema.Column{ArtistsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "artist_status",
+				Unique:  false,
+				Columns: []*schema.Column{ArtistsColumns[5]},
+			},
+		},
+	}
+	// AuditLogsColumns holds the columns for the "audit_logs" table.
+	AuditLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "actor_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "action", Type: field.TypeString, Size: 64},
+		{Name: "entity_type", Type: field.TypeString, Size: 32},
+		{Name: "entity_id", Type: field.TypeUUID},
+		{Name: "before", Type: field.TypeJSON, Nullable: true},
+		{Name: "after", Type: field.TypeJSON, Nullable: true},
+		{Name: "request_id", Type: field.TypeString, Nullable: true, Size: 128},
+	}
+	// AuditLogsTable holds the schema information for the "audit_logs" table.
+	AuditLogsTable = &schema.Table{
+		Name:       "audit_logs",
+		Columns:    AuditLogsColumns,
+		PrimaryKey: []*schema.Column{AuditLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "auditlog_entity_type_entity_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[5], AuditLogsColumns[6]},
+			},
+			{
+				Name:    "auditlog_actor_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[3]},
+			},
+			{
+				Name:    "auditlog_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[1]},
+			},
+		},
+	}
+	// EventsColumns holds the columns for the "events" table.
+	EventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "title", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "doors_open_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "scheduled_start_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "expected_end_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "ticket_url", Type: field.TypeString, Nullable: true, Size: 2048},
+		{Name: "publish_state", Type: field.TypeEnum, Enums: []string{"draft", "published"}, Default: "draft"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"scheduled", "cancelled", "postponed"}, Default: "scheduled"},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "venue_id", Type: field.TypeUUID},
+	}
+	// EventsTable holds the schema information for the "events" table.
+	EventsTable = &schema.Table{
+		Name:       "events",
+		Columns:    EventsColumns,
+		PrimaryKey: []*schema.Column{EventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "events_venues_events",
+				Columns:    []*schema.Column{EventsColumns[14]},
+				RefColumns: []*schema.Column{VenuesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_venue_id",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[14]},
+			},
+			{
+				Name:    "event_publish_state_status",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[9], EventsColumns[10]},
+			},
+			{
+				Name:    "event_scheduled_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[6]},
+			},
+		},
+	}
+	// LineupEntriesColumns holds the columns for the "lineup_entries" table.
+	LineupEntriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "billing", Type: field.TypeEnum, Enums: []string{"headliner", "support"}},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "artist_id", Type: field.TypeUUID},
+		{Name: "event_id", Type: field.TypeUUID},
+	}
+	// LineupEntriesTable holds the schema information for the "lineup_entries" table.
+	LineupEntriesTable = &schema.Table{
+		Name:       "lineup_entries",
+		Columns:    LineupEntriesColumns,
+		PrimaryKey: []*schema.Column{LineupEntriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lineup_entries_artists_lineup_entries",
+				Columns:    []*schema.Column{LineupEntriesColumns[5]},
+				RefColumns: []*schema.Column{ArtistsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "lineup_entries_events_lineup",
+				Columns:    []*schema.Column{LineupEntriesColumns[6]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lineupentry_event_id_artist_id",
+				Unique:  true,
+				Columns: []*schema.Column{LineupEntriesColumns[6], LineupEntriesColumns[5]},
+			},
+			{
+				Name:    "lineupentry_artist_id",
+				Unique:  false,
+				Columns: []*schema.Column{LineupEntriesColumns[5]},
+			},
+		},
+	}
+	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
+	RefreshTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "expires_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// RefreshTokensTable holds the schema information for the "refresh_tokens" table.
+	RefreshTokensTable = &schema.Table{
+		Name:       "refresh_tokens",
+		Columns:    RefreshTokensColumns,
+		PrimaryKey: []*schema.Column{RefreshTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "refresh_tokens_users_refresh_tokens",
+				Columns:    []*schema.Column{RefreshTokensColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "refreshtoken_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[6]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "email", Type: field.TypeString, Unique: true, Size: 255},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin"}, Default: "admin"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "blocked"}, Default: "active"},
+		{Name: "last_login_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_role_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[6], UsersColumns[7]},
+			},
+		},
+	}
+	// VenuesColumns holds the columns for the "venues" table.
+	VenuesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "name", Type: field.TypeString, Size: 200},
+		{Name: "city", Type: field.TypeString, Size: 100},
+		{Name: "address", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "info", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "timezone", Type: field.TypeString, Size: 64, Default: "Asia/Kolkata"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "retired"}, Default: "active"},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// VenuesTable holds the schema information for the "venues" table.
+	VenuesTable = &schema.Table{
+		Name:       "venues",
+		Columns:    VenuesColumns,
+		PrimaryKey: []*schema.Column{VenuesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "venue_city",
+				Unique:  false,
+				Columns: []*schema.Column{VenuesColumns[4]},
+			},
+			{
+				Name:    "venue_status",
+				Unique:  false,
+				Columns: []*schema.Column{VenuesColumns[8]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ArtistsTable,
+		AuditLogsTable,
+		EventsTable,
+		LineupEntriesTable,
+		RefreshTokensTable,
 		UsersTable,
+		VenuesTable,
 	}
 )
 
 func init() {
+	EventsTable.ForeignKeys[0].RefTable = VenuesTable
+	LineupEntriesTable.ForeignKeys[0].RefTable = ArtistsTable
+	LineupEntriesTable.ForeignKeys[1].RefTable = EventsTable
+	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 }

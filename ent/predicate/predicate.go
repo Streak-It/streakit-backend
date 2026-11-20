@@ -6,5 +6,23 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Artist is the predicate function for artist builders.
+type Artist func(*sql.Selector)
+
+// AuditLog is the predicate function for auditlog builders.
+type AuditLog func(*sql.Selector)
+
+// Event is the predicate function for event builders.
+type Event func(*sql.Selector)
+
+// LineupEntry is the predicate function for lineupentry builders.
+type LineupEntry func(*sql.Selector)
+
+// RefreshToken is the predicate function for refreshtoken builders.
+type RefreshToken func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// Venue is the predicate function for venue builders.
+type Venue func(*sql.Selector)
