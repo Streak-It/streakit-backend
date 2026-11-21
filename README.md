@@ -56,6 +56,18 @@ docs/swagger         generated OpenAPI (make swagger)
 | New migration after schema change | `make migrate-diff name=<name>` |
 | Apply migrations (staging/prod, needs Atlas CLI) | `make migrate-apply DATABASE_URL=...` |
 
+### Using Neon (hosted Postgres)
+
+Paste the Neon connection string into `.env` as `DATABASE_URL=...` and you're
+done. You don't need `make db-up` or Docker. `DATABASE_URL` overrides the
+`DATABASE_HOST`/`PORT`/`USER`/`PASSWORD`/`NAME`/`SSLMODE` fields.
+
+- App: use the **pooled** string (host contains `-pooler`).
+- Migrations: use the **direct** string, e.g.
+  `make migrate-apply DATABASE_URL='postgresql://...neon.tech/neondb?sslmode=require'`.
+- Neon free tier suspends idle compute, so the first request after a pause can
+  take a second or two while it wakes.
+
 In staging/production keep `DATABASE_AUTO_MIGRATE=false` (the default there)
 and apply `migrations/` with Atlas.
 
