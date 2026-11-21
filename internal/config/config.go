@@ -68,6 +68,9 @@ type BootstrapConfig struct {
 }
 
 type DatabaseConfig struct {
+	// URL is a full connection string (e.g. a Neon URL). When set it takes
+	// precedence over Host/Port/User/Password/Name/SSLMode.
+	URL                   string
 	Host                  string
 	Port                  string
 	User                  string
@@ -98,11 +101,12 @@ func Load() (*Config, error) {
 		App: AppConfig{
 			Name:           getEnv("APP_NAME", "streakit"),
 			Env:            env,
-			Port:           getEnv("APP_PORT", "8080"),
+			Port:           listenPort(),
 			TrustedProxies: getListEnv("APP_TRUSTED_PROXIES"),
 			CORSOrigins:    getListEnv("CORS_ORIGINS"),
 		},
 		Database: DatabaseConfig{
+			URL:      getEnv("DATABASE_URL", ""),
 			Host:     getEnv("DATABASE_HOST", "localhost"),
 			Port:     getEnv("DATABASE_PORT", "5432"),
 			User:     getEnv("DATABASE_USER", "postgres"),
@@ -181,7 +185,7 @@ func (c *Config) validate() error {
 	}
 
 	if port, err := strconv.Atoi(c.App.Port); err != nil || port < 1 || port > 65535 {
-		errs = append(errs, fmt.Errorf("APP_PORT must be a valid port, got %q", c.App.Port))
+		errs = append(errs, fmt.Errorf("PORT/APP_PORT must be a valid port, got %q", c.App.Port))
 	}
 
 	if c.App.ShutdownTimeout <= 0 {
@@ -213,13 +217,17 @@ func (c *Config) validate() error {
 		errs = append(errs, errors.New("DATABASE_MAX_IDLE_CONNECTIONS must be between 0 and DATABASE_MAX_OPEN_CONNECTIONS"))
 	}
 
-	switch db.SSLMode {
-	case "disable", "allow", "prefer", "require", "verify-ca", "verify-full":
-	default:
-		errs = append(errs, fmt.Errorf("invalid DATABASE_SSLMODE %q", db.SSLMode))
+	if db.URL != "" {
+		errs = append(errs, validateDatabaseURL(db.URL, c.App.IsProduction())...)
+	} else {
+		switch db.SSLMode {
+		case "disable", "allow", "prefer", "require", "verify-ca", "verify-full":
+		default:
+			errs = append(errs, fmt.Errorf("invalid DATABASE_SSLMODE %q", db.SSLMode))
+		}
 	}
 
-	if c.App.IsProduction() {
+	if c.App.IsProduction() && db.URL == "" {
 		if db.Password == "postgres" || db.Password == "" {
 			errs = append(errs, errors.New("DATABASE_PASSWORD must be set to a non-default value in production"))
 		}
@@ -266,7 +274,46 @@ func (c *Config) validateAuth() []error {
 	return errs
 }
 
+// validateDatabaseURL checks DATABASE_URL without ever echoing it back,
+// since it contains the password.
+func validateDatabaseURL(raw string, production bool) []error {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return []error{errors.New("DATABASE_URL is not a valid URL")}
+	}
+	var errs []error
+	if u.Scheme != "postgres" && u.Scheme != "postgresql" {
+		errs = append(errs, errors.New("DATABASE_URL must start with postgres:// or postgresql://"))
+	}
+	if u.Host == "" {
+		errs = append(errs, errors.New("DATABASE_URL must include a host"))
+	}
+	if strings.Trim(u.Path, "/") == "" {
+		errs = append(errs, errors.New("DATABASE_URL must include a database name"))
+	}
+	if mode := u.Query().Get("sslmode"); mode == "disable" && production {
+		slog.Warn("DATABASE_URL has sslmode=disable in production")
+	}
+	return errs
+}
+
+// DSN returns the connection string. DATABASE_URL wins when set; if it has
+// no sslmode, "require" is added for non-local hosts (Neon and other hosted
+// Postgres reject plaintext connections).
 func (c DatabaseConfig) DSN() string {
+	if c.URL != "" {
+		u, err := url.Parse(c.URL)
+		if err != nil {
+			return c.URL
+		}
+		q := u.Query()
+		if q.Get("sslmode") == "" && !isLocalHost(u.Hostname()) {
+			q.Set("sslmode", "require")
+			u.RawQuery = q.Encode()
+		}
+		return u.String()
+	}
+
 	u := &url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(c.User, c.Password),
@@ -279,6 +326,23 @@ func (c DatabaseConfig) DSN() string {
 	u.RawQuery = query.Encode()
 
 	return u.String()
+}
+
+func isLocalHost(host string) bool {
+	if host == "localhost" || host == "" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
+// listenPort prefers PORT, which Vercel sets and then proxies to.
+// APP_PORT remains the local default when PORT is unset.
+func listenPort() string {
+	if port := getEnv("PORT", ""); port != "" {
+		return port
+	}
+	return getEnv("APP_PORT", "8080")
 }
 
 func getEnv(key, fallback string) string {
